@@ -1,0 +1,2 @@
+testj.c文件实现文本的字符规范化，.h为rapidjson头文件。
+可实现从json读出body部分，并且修改后重新写入json文件。
