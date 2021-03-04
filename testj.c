@@ -351,6 +351,8 @@ void editstr(char str[],char* lang){
         	//printf("转换为多字节字符串\n");
         	wcstombs(str, pwcs,20000);
         	//printf("%s\n",str);
+		free(pwcs);
+		pwcs = NULL;
 	}
 	if(strcmp(lang,e)==0){
 		//ascii
@@ -385,7 +387,7 @@ int exejson(FILE* fd,FILE* ft)
 
 	int c=1;
 	//读取文件中的数据
-	char buf[5000]="0";
+	//char buf[5000]="0";
 
 	Document d;
 
@@ -394,9 +396,12 @@ int exejson(FILE* fd,FILE* ft)
 	//char* la=new char[10];
 	char* la=(char *)malloc(10*sizeof(char));
 	while(c<N+1){
-		fgets(buf,sizeof(buf),fd);
+		char* pc=(char *)malloc(4194304);
+		char* la=(char *)malloc(10);
+		char json[3194303];
+		fgets(json,sizeof(json),fd);
 
-		char* json = buf;
+		//char* json = buf;
 
     		d.Parse(json);
 
@@ -437,6 +442,12 @@ int exejson(FILE* fd,FILE* ft)
 		fprintf(ft,"%s\n",buffer.GetString());
 
 		printf("c=%d\n",c++);
+		
+		free(pc);
+		pc = NULL;
+		free(la);
+		la = NULL;
+		
 	
 		
 	}
@@ -444,6 +455,7 @@ int exejson(FILE* fd,FILE* ft)
 	//关闭文件
 	fclose(fd);
 	fclose(ft);
+	d.SetObject();
 
 }
 
