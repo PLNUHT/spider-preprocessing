@@ -12,7 +12,7 @@
 
 using namespace rapidjson;
 
-
+//字符串删除
 //每次从当前的str中搜寻子串，没有找到就返回NULL，
 //找到就返回子串在str中的尾部的下一个指针
 char* match(char *str, char *want){
@@ -45,6 +45,8 @@ int del_substr(char *str, char *substr){
 	}
     	return TRUE;
 }
+
+//字符串特定子串删除（宽字符）
 //每次从当前的str中搜寻子串，没有找到就返回NULL，
 //找到就返回子串在str中的尾部的下一个指针
 wchar_t* wmatch(wchar_t *str, wchar_t *want){
@@ -78,6 +80,7 @@ int wdel_substr(wchar_t *str, wchar_t *substr){
         return TRUE;
 }
 
+//字符串替换
 void str_replace(char * cp, int n, char * str)
 {
         int lenofstr;
@@ -111,9 +114,9 @@ void str_replace(char * cp, int n, char * str)
 }
 
 
-
+//删除指定Unicode编码的字符
 void del_uni(wchar_t str[]){
-	wchar_t* u0=new wchar_t[20];
+	wchar_t* u0=(wchar_t *)malloc(50);
 	char* s0="\uFFF0";
 	mbstowcs(u0, s0, 10);
 	wdel_substr(str,u0);
@@ -178,8 +181,12 @@ void del_uni(wchar_t str[]){
         mbstowcs(u0, sf, 10);
         wdel_substr(str,u0);
 	
+	free(u0);
+	u0 = NULL;
+	
 }
 
+//删除指定ASCII编码的字符
 void del_asc(char str[]){
 	for(int i = 0;str[i]!='\0'; i++){
 		if(str[i]>=0 && str[i]<32 && str[i]!='\t' && str[i]!='\n'){
@@ -189,6 +196,7 @@ void del_asc(char str[]){
 	}
 }
 
+//空格替换
 void blank_re(char str[]){
 	char* b1="\u0020";
 	char* b2="\u00A0";
@@ -213,7 +221,7 @@ void blank_re(char str[]){
 
 
 }
-
+//字符串中特定子串的替换
 char *strrpc(char *str,char *oldstr,char *newstr){
     char bstr[strlen(str)];//转换缓冲区
     memset(bstr,0,sizeof(bstr));
@@ -231,7 +239,7 @@ char *strrpc(char *str,char *oldstr,char *newstr){
     return str;
 } 
 
-
+//去除多行空格和多个连续空格
 void blank_con(char body[]){
 	char con[]="<p></p><p></p>";
         char* blank=strstr(body,con);
@@ -246,42 +254,40 @@ void blank_con(char body[]){
 		blank=strstr(body,con);
 		bn=strstr(body,n);
 	}
-
-
-
 }
 
+//半角转全角
 void half_convert(wchar_t str[]){
 	for(int i=0;str[i];i++){
-		if(str[i]<127 && str[i]>33 && str[i]!=60 && str[i]!=62 && str[i]!=47 && str[i]!=92){
-			str[i] += 65248;
+		if(str[i]<127 && str[i]>32 && str[i]!=60 && str[i]!=62 && str[i]!=47 && str[i]!=92){
+			str[i] += 65248;//半角符号转为全角
 		}
 		if(str[i]==12288){
-			str[i] = 32;
+			str[i] = 32;//空格转换
 		}
 		if(str[i]==160){
-                        str[i] = 32;
+                        str[i] = 32;//空格转换
                 }
 		if(str[i]>=65296 && str[i]<=65305){
-			str[i] -= 65248;
+			str[i] -= 65248;//数字转换回半角
 		}
 		if(str[i]>=65313 && str[i]<=65338){
-                        str[i] -= 65248;
+                        str[i] -= 65248;//大写字母转换回半角
                 }
 		if(str[i]>=65345 && str[i]<=65370){
-                        str[i] -= 65248;
+                        str[i] -= 65248;//小写字母转换回半角
                 }
 	}
-	//printf("1\n");
+
 	for(int i=1;str[i+1];i++){
-		if(str[i-1]<=48 && str[i+1]<=57 && str[i]>65280){
-			str[i] -= 65248;
+		if(str[i-1]<=48 && str[i+1]<=57 && str[i]>65280 && str[i]<65375){
+			str[i] -= 65248;//数字之间的点转为半角
 		}
-		if(str[i-1]<=65 && str[i+1]<=90 && str[i]>65280){
-                        str[i] -= 65248;
+		if(str[i-1]<=65 && str[i+1]<=90 && str[i]>65280 && str[i]<65375){
+                        str[i] -= 65248;//大写字母之间符号转半角
                 }
-		if(str[i-1]<=97 && str[i+1]<=122 && str[i]>65280){
-                        str[i] -= 65248;
+		if(str[i-1]<=97 && str[i+1]<=122 && str[i]>65280 && str[i]<65375){
+                        str[i] -= 65248;//小写字母之间符号转半角
                 }
 	}
 }
@@ -289,25 +295,22 @@ void half_convert(wchar_t str[]){
 void full_convert(char str[]){
         for(int i=0;str[i];i++){
                 if(str[i]>65280 && str[i]<65375){
-                        str[i] -= 65248;
+                        str[i] -= 65248;//英文、数字符号转半角
                 }
                 if(str[i]==12288){
-                        str[i] = 32;
+                        str[i] = 32;//空格转换
                 }
                 if(str[i]==160){
-                        str[i] = 32;
+                        str[i] = 32;//空格转换
                 }
                 
         }
         
 }
 
-
+//对body文本做处理
 void editstr(char str[],char* lang){
-	//char* gstr= "修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后修改后";
-	//strcpy(str,gstr);
-	//char *pmb = (char *)malloc(10000);
-        //strcpy(pmb,str);
+	
 	char* z="zh";
 	char* e="en";
 	char* del1="\n";
@@ -326,31 +329,21 @@ void editstr(char str[],char* lang){
 	}
 
 
-	//空格替换
-	
 
 	//连续空行空格
 	blank_con(str);
 
 	if(strcmp(lang,z)==0){
-		wchar_t *pwcs = (wchar_t *)malloc(20000);
-        	//printf("转换回宽字符字符串\n");
-        	mbstowcs(pwcs, str, 20000);
-        	//setlocale(LC_ALL, "zh-CN");
-        	//printf("%ls\n",pwcs);
-
+		wchar_t *pwcs = (wchar_t *)malloc(4194300);
+        	mbstowcs(pwcs, str, 4194300);
+        
 		//文本处理
 		//unicode
 		del_uni(pwcs);
 
 		//标点符号
-		half_convert(pwcs);
-
-
-
-        	//printf("转换为多字节字符串\n");
-        	wcstombs(str, pwcs,20000);
-        	//printf("%s\n",str);
+		half_convert(pwcs);        	
+        	wcstombs(str, pwcs,4194300);
 		free(pwcs);
 		pwcs = NULL;
 	}
@@ -365,91 +358,50 @@ void editstr(char str[],char* lang){
 	}
 
 }
+
+//解析json
 int exejson(FILE* fd,FILE* ft)
 {
-	
-
-	
 	setlocale(LC_ALL, "");
-	//printf("%s\n",filename);
-	//打开JSON数据文件
-	//FILE* fd=fopen(filename,"r");
-	//if(fd==NULL)
-	//{
-	//	printf("error\n");
-	//	printf("%s\n",filename);
-	//	return -1;
-	//}
-	//char outname[100]="/home/yyh/workspace/res";
-	//strcat(outname,filename);
-	//printf("%s\n",outname);
-	//FILE* ft = fopen(outname,"w");
-
 	int c=1;
-	//读取文件中的数据
-	//char buf[5000]="0";
-
 	Document d;
-
-	//char* pc=new char[10000];
-	char* pc=(char *)malloc(20000*sizeof(char));
-	//char* la=new char[10];
-	char* la=(char *)malloc(10*sizeof(char));
 	while(c<N+1){
 		char* pc=(char *)malloc(4194304);
 		char* la=(char *)malloc(10);
 		char json[3194303];
 		fgets(json,sizeof(json),fd);
-
-		//char* json = buf;
-
     		d.Parse(json);
 
 		// 2. 利用 DOM 作出修改。
     		Value& s = d["body"];
 		Value& l = d["lang"];
-    		//s.SetString("要修改的内容文本");
-		
-		
-		const char* sv = s.GetString();
-		
+		const char* sv = s.GetString();		
 		const char* lv = l.GetString();
                 
-
 		strcpy(pc,sv);
 		strcpy(la,lv);
 		editstr(pc,la);
 		
 		s.SetString(StringRef(pc));
 
-		//setlocale(LC_ALL, "zh-CN");//将本地环境设置为简体中文。
-
-		//printf("%s\n",s.GetString());
-		//printf("%s\n",l.GetString());
-
 		// 3. 把 DOM 转换（stringify）成 JSON。
     		StringBuffer buffer;
     		Writer<StringBuffer> writer(buffer);
     		d.Accept(writer);
  
-    		// Output
-    		//printf("%s\n",buffer.GetString());
-		
+    		// Output		
         	if(ft==NULL){
 			return -1;
 		}
 	        //写入
 		fprintf(ft,"%s\n",buffer.GetString());
 
-		printf("c=%d\n",c++);
-		
+		//printf("c=%d\n",c++);
+		c++;
 		free(pc);
 		pc = NULL;
 		free(la);
-		la = NULL;
-		
-	
-		
+		la = NULL;	
 	}
 
 	//关闭文件
@@ -458,7 +410,7 @@ int exejson(FILE* fd,FILE* ft)
 	d.SetObject();
 
 }
-
+//字符串从右侧开始取一定长度的子串
 char *right(char *dst,char *src,int n)
 {
 	char *p=src;
@@ -471,10 +423,8 @@ char *right(char *dst,char *src,int n)
 }
 
 int main(){
-	
 
-	//char load_file[256];
-        char* name=(char *)malloc(100*sizeof(char));
+        char* name[100];
 	char* n = "files.txt";
 	FILE *tp=fopen(n,"rb");
 	char* st="100000 ";
@@ -484,28 +434,11 @@ int main(){
                 return -1;
         }
 	int c=1;
-	//char buf[5000]="0";
-	//char* pc=(char *)malloc(20000*sizeof(char));
-	while(c<111)
+	while(c<112)
         {
                 fgets(name,100,tp);
-
-
 		if(c>1){
-			//name="100000 /data/raw/2021-01-20_7.json";
-			//char* fn=(char *)malloc(100*sizeof(char));
 			del_substr(name,st);
-			//right(fn,name,28);
-
-			//strcat(fn,st);
-			//const char* cn=(const char *)malloc(100*sizeof(char));
-			//cn=fn;
-			//打开JSON数据文件
-			//char fn[] = "/data/raw/2021-01-20_7.json";
-		        //printf("%d\n",strlen(fn));
-			//printf("%d\n",fn[26]);
-			//printf("%d\n",strlen(name));
-			//printf("%d\n",name[26]);
 			name[27]='\0';
 			FILE* fd=fopen(name,"r");
         		if(fd==NULL)
@@ -514,23 +447,13 @@ int main(){
                 		printf("%s\n",name);
                 		return -1;
         		}
-        		char outname[100]="/home/yyh/workspace/res";
+        		char outname[100]="/data/processed";
         		strcat(outname,name);
-        		//printf("%s\n",outname);
         		FILE* ft = fopen(outname,"w");
-
-			//printf("%s\n",name);
-
 			exejson(fd,ft);
 			
 		}
-			printf("%d\n",c++);
-			
-			
+			printf("%d\n",c++);	
 	}
-	//name="/data/raw/2021-01-20_7.json";
-	//exejson(name);
 	fclose(tp);
-
-	
 }
