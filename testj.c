@@ -113,6 +113,39 @@ void str_replace(char * cp, int n, char * str)
         strncpy(cp,str,lenofstr);
 }
 
+//字符串替换（宽字符）
+void wstr_replace(wchar_t * cp, int n, wchar_t * str)
+{
+        int lenofstr;
+        int i;
+        wchar_t * tmp;
+        lenofstr = wcslen(str);
+        //str3比str2短，往前移动
+        if(lenofstr < n)
+        {
+                tmp = cp+n;
+                while(*tmp)
+                {
+                        *(tmp-(n-lenofstr)) = *tmp; //n-lenofstr是移动的距离
+                        tmp++;
+                }
+                *(tmp-(n-lenofstr)) = *tmp; //move '\0'
+        }
+        else
+                //str3比str2长，往后移动
+                if(lenofstr > n)
+                {
+                        tmp = cp;
+                        while(*tmp) tmp++;
+                        while(tmp>=cp+n)
+                        {
+                                *(tmp+(lenofstr-n)) = *tmp;
+                                tmp--;
+                        }
+                }
+        wcsncpy(cp,str,lenofstr);
+}
+
 
 //删除指定Unicode编码的字符
 void del_uni(wchar_t str[]){
@@ -258,38 +291,125 @@ void blank_con(char body[]){
 
 //半角转全角
 void half_convert(wchar_t str[]){
-	for(int i=0;str[i];i++){
-		if(str[i]<127 && str[i]>32 && str[i]!=60 && str[i]!=62 && str[i]!=47 && str[i]!=92){
-			str[i] += 65248;//半角符号转为全角
-		}
-		if(str[i]==12288){
-			str[i] = 32;//空格转换
-		}
-		if(str[i]==160){
+	int c1 = 1;
+        int c2 =1;
+
+        //替换"
+        char* wdel2="&quot;";
+        char* wt="\"";
+        wchar_t del2[9];
+        wchar_t t[9];
+        mbstowcs(del2, wdel2, 10);
+        mbstowcs(t, wt, 10);
+
+
+        wchar_t* p=wcsstr(str,del2);
+        while(p){
+                if(*(p+6)>127 && *(p-1)>127){
+                        //每找到一个str2，就用str3来替换
+                        wstr_replace(p,wcslen(del2),t);
+                        p = p+wcslen(t);
+                }
+                else{
+                        p++;
+                }
+                p = wcsstr(p,del2);
+
+        }
+	
+	//替换;
+
+        char* wdel3="&amp;";
+        char* wt1=";";
+        wchar_t del3[9];
+        wchar_t t1[9];
+        mbstowcs(del3, wdel3, 10);
+        mbstowcs(t1, wt1, 10);
+
+        wchar_t* p3=wcsstr(str,del3);
+        while(p3){
+                if(*(p3+5)>127 && *(p3-1)>127){
+                        //每找到一个str2，就用str3来替换
+                        wstr_replace(p3,wcslen(del3),t1);
+
+                        p3 = p3+wcslen(t1);
+                }
+                else{
+                        p3++;
+                }
+                p3 = wcsstr(p3,del3);
+
+        }
+	
+	for(int i=1;str[i+1];i++){
+                if(str[i-1]>127 && str[i+1]>127){
+
+
+                        if(str[i] == 44){
+                                str[i] += 65248;//逗号
+                        }
+                        if(str[i] == 46){
+                                str[i] = 0x3002;//句号
+                        }
+                        if(str[i] == 60){
+                                str[i] = 0x300a;//书名号左
+                        }
+                        if(str[i] == 62){
+                                str[i] = 0x300b;//书名号右
+                        }
+                        if(str[i] == 63){
+                                str[i] += 65248;//问号
+                        }
+                        if(str[i] == 33){
+                                str[i] += 65248;//感叹号
+                        }
+                        if(str[i] == 59){
+                                str[i] += 65248;//分号
+                        }
+                        if(str[i] == 58){
+                                str[i] += 65248;//冒号
+                        }
+                        if(str[i] == 34){
+                                if(c1 % 2 == 1){//第一个双引号
+                                        str[i] = 0x201c;
+                                }
+                                if(c1 % 2 == 0){//第二个双引号
+                                        str[i] = 0x201d;
+                                }
+                                c1++;
+                        }
+			if(str[i] == 39){
+                                if(c2 % 2 == 1){//第一个单引号
+                                        str[i] = 0x2018;
+                                }
+                                if(c2 % 2 == 0){//第二个单引号
+                                        str[i] = 0x2019;
+                                }
+                                c2++;
+                        }
+                        if(str[i] == 40){//左括号
+                                str[i] = 0xFF08;
+                        }
+                        if(str[i] == 41){//右括号
+                                str[i] = 0xFF09;
+                        }
+                        if(str[i] == 91){//左方括号
+                                str[i] = 0x3014;
+                        }
+                        if(str[i] == 93){//右方括号
+                                str[i] = 0x3015;
+                        }
+                        if(str[i] == 45){//破折号
+                                str[i] = 0x2014;
+                        }
+                }
+                if(str[i]==12288){
                         str[i] = 32;//空格转换
                 }
-		if(str[i]>=65296 && str[i]<=65305){
-			str[i] -= 65248;//数字转换回半角
-		}
-		if(str[i]>=65313 && str[i]<=65338){
-                        str[i] -= 65248;//大写字母转换回半角
+                if(str[i]==160){
+                        str[i] = 32;//空格转换
                 }
-		if(str[i]>=65345 && str[i]<=65370){
-                        str[i] -= 65248;//小写字母转换回半角
-                }
-	}
-
-	for(int i=1;str[i+1];i++){
-		if(str[i-1]<=48 && str[i+1]<=57 && str[i]>65280 && str[i]<65375){
-			str[i] -= 65248;//数字之间的点转为半角
-		}
-		if(str[i-1]<=65 && str[i+1]<=90 && str[i]>65280 && str[i]<65375){
-                        str[i] -= 65248;//大写字母之间符号转半角
-                }
-		if(str[i-1]<=97 && str[i+1]<=122 && str[i]>65280 && str[i]<65375){
-                        str[i] -= 65248;//小写字母之间符号转半角
-                }
-	}
+        }
 }
 
 void full_convert(char str[]){
@@ -314,22 +434,10 @@ void editstr(char str[],char* lang){
 	char* z="zh";
 	char* e="en";
 	char* del1="\n";
-	char* del2="&quot;";
 	
 	//删除换行符
 	del_substr(str,del1);
-	del_substr(str,del2);
-	char* t="\"";
-	char* p=strstr(str,del2);
-        while(p){
-		//每找到一个str2，就用str3来替换
-                str_replace(p,strlen(del2),t);
-                p = p+strlen(t);
-                p = strstr(p,del2);
-	}
-
-
-
+	
 	//连续空行空格
 	blank_con(str);
 
